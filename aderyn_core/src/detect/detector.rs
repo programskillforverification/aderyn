@@ -5,6 +5,33 @@ use crate::{
     ast::NodeID,
     context::workspace_context::WorkspaceContext,
     detect::{high::*, low::*},
+    detect::{
+        high::{
+            ArbitraryTransferFromDetector, AvoidAbiEncodePackedDetector,
+            BlockTimestampDeadlineDetector, DangerousUnaryOperatorDetector,
+            DelegateCallInLoopDetector, DynamicArrayLengthAssignmentDetector,
+            EnumerableLoopRemovalDetector, ExperimentalEncoderDetector,
+            IncorrectShiftOrderDetector, IncorrectUseOfCaretOperatorDetector,
+            MultipleConstructorsDetector, NestedStructInMappingDetector, RTLODetector,
+            ReusedContractNameDetector, SelfdestructIdentifierDetector,
+            StateVariableShadowingDetector, StorageArrayEditWithMemoryDetector,
+            TautologicalCompareDetector, UncheckedReturnDetector,
+            UninitializedStateVariableDetector, UnprotectedInitializerDetector,
+            UnsafeCastingDetector, YulReturnDetector,
+        },
+        low::{
+            CentralizationRiskDetector, ConstantsInsteadOfLiteralsDetector,
+            ContractsWithTodosDetector, DeprecatedOZFunctionsDetector,
+            DivisionBeforeMultiplicationDetector, EcrecoverDetector, EmptyBlockDetector,
+            InconsistentTypeNamesDetector, LargeLiteralValueDetector,
+            NonReentrantBeforeOthersDetector, PushZeroOpcodeDetector, RedundantStatementsDetector,
+            RequireWithStringDetector, RevertsAndRequiresInLoopsDetector,
+            SolmateSafeTransferLibDetector, UnindexedEventsDetector, UnsafeERC20FunctionsDetector,
+            UnsafeERC721MintDetector, UnspecificSolidityPragmaDetector, UselessErrorDetector,
+            UselessInternalFunctionDetector, UselessModifierDetector,
+            UselessPublicFunctionDetector, ZeroAddressCheckDetector,
+        },
+    },
 };
 
 use std::{
@@ -58,6 +85,7 @@ pub fn get_all_issue_detectors() -> Vec<Box<dyn IssueDetector>> {
         Box::<IncorrectUseOfCaretOperatorDetector>::default(),
         Box::<YulReturnDetector>::default(),
         Box::<StateVariableShadowingDetector>::default(),
+        Box::<UncheckedSendDetector>::default(),
         Box::<MisusedBooleanDetector>::default(),
         Box::<SendEtherNoChecksDetector>::default(),
         Box::<DelegateCallOnUncheckedAddressDetector>::default(),
@@ -65,6 +93,8 @@ pub fn get_all_issue_detectors() -> Vec<Box<dyn IssueDetector>> {
         Box::<RTLODetector>::default(),
         Box::<UncheckedReturnDetector>::default(),
         Box::<DangerousUnaryOperatorDetector>::default(),
+        Box::<RedundantStatementsDetector>::default(),
+        Box::<PublicVariableReadInExternalContextDetector>::default(),
         Box::<WeakRandomnessDetector>::default(),
         Box::<PreDeclaredLocalVariableUsageDetector>::default(),
         Box::<DeletionNestedMappingDetector>::default(),
@@ -121,6 +151,7 @@ pub(crate) enum IssueDetectorNamePool {
     IncorrectCaretOperator,
     YulReturn,
     StateVariableShadowing,
+    UncheckedSend,
     MisusedBoolean,
     SendEtherNoChecks,
     DelegateCallUncheckedAddress,
@@ -129,6 +160,8 @@ pub(crate) enum IssueDetectorNamePool {
     RTLO,
     UncheckedReturn,
     DangerousUnaryOperator,
+    RedundantStatements,
+    PublicVariableReadInExternalContext,
     WeakRandomness,
     PreDeclaredLocalVariableUsage,
     DeleteNestedMapping,
@@ -252,6 +285,7 @@ pub fn request_issue_detector_by_name(detector_name: &str) -> Option<Box<dyn Iss
         IssueDetectorNamePool::StateVariableShadowing => {
             Some(Box::<StateVariableShadowingDetector>::default())
         }
+        IssueDetectorNamePool::UncheckedSend => Some(Box::<UncheckedSendDetector>::default()),
         IssueDetectorNamePool::MisusedBoolean => Some(Box::<MisusedBooleanDetector>::default()),
         IssueDetectorNamePool::SendEtherNoChecks => {
             Some(Box::<SendEtherNoChecksDetector>::default())
@@ -266,6 +300,12 @@ pub fn request_issue_detector_by_name(detector_name: &str) -> Option<Box<dyn Iss
         IssueDetectorNamePool::UncheckedReturn => Some(Box::<UncheckedReturnDetector>::default()),
         IssueDetectorNamePool::DangerousUnaryOperator => {
             Some(Box::<DangerousUnaryOperatorDetector>::default())
+        }
+        IssueDetectorNamePool::RedundantStatements => {
+            Some(Box::<RedundantStatementsDetector>::default())
+        }
+        IssueDetectorNamePool::PublicVariableReadInExternalContext => {
+            Some(Box::<PublicVariableReadInExternalContextDetector>::default())
         }
         IssueDetectorNamePool::WeakRandomness => Some(Box::<WeakRandomnessDetector>::default()),
         IssueDetectorNamePool::PreDeclaredLocalVariableUsage => {
