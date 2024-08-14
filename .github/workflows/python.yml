@@ -1,35 +1,146 @@
-name: CI
-
 on: [push, pull_request, workflow_dispatch]
 
+name: Aderyn-py
+
 jobs:
-  build:
+  check:
+    name: Check
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: [3.8, 3.9, 3.10]
-        os: [ubuntu-latest]
-
     steps:
-      - name: Checkout repository
+      - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install Rust
+      - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
+          profile: minimal
           toolchain: stable
-          components: clippy
+          override: true
 
-      - name: Install maturin
-        run: pip install maturin
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
 
-      - name: Build and test
+      - name: Install git submodules
         run: |
+          git submodule update --init --recursive
+
+      - name: Run cargo check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: foundry-toolchain
+        uses: foundry-rs/foundry-toolchain@v1.2.0
+
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - uses: Swatinem/rust-cache@v2
+      - name: Run cargo build
+        run: |
+          cargo build
+
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Submodule init
+        run: |
+          git submodule update --init --recursive
+
+      - uses: Swatinem/rust-cache@v2
+      - name: Run cargo test
+        run: |
+          cargo test _by_loading_contract_directly
+
+      - uses: Swatinem/rust-cache@v2
+      - name: Run cargo test
+        run: |
+          cargo test -- --nocapture
+
+  reports:
+    name: Check Reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: foundry-toolchain
+        uses: foundry-rs/foundry-toolchain@v1.2.0
+
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Setup virtual environment
+        run: |
+          python -m venv venv
+          source ./.venv/bin/activate
+          pip install -r ./aderyn_py/requirements.txt
+
+      - name: Submodule init
+        run: |
+          git submodule update --init --recursive
+
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - uses: bahmutov/npm-install@v1
+        with:
+          useLockFile: false
+          working-directory: tests/2024-05-Sablier/v2-core
+
+      - uses: bahmutov/npm-install@v1
+        with:
+          useLockFile: false
+          working-directory: tests/prb-math/
+
+      - name: Run tests
+        run: |
+          cd aderyn_py
           maturin develop
-          maturin test
+          pytest tests
