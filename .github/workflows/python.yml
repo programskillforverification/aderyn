@@ -54,12 +54,6 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Setup virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r ./aderyn_py/requirements.txt
-
       - name: Submodule init
         run: |
           git submodule update --init --recursive
@@ -84,6 +78,12 @@ jobs:
         with:
           useLockFile: false
           working-directory: tests/prb-math/
+
+      - name: Setup virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r ./aderyn_py/requirements.txt
 
       - name: Run tests
         run: |
