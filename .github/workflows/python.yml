@@ -56,8 +56,8 @@ jobs:
 
       - name: Setup virtual environment
         run: |
-          python -m venv .venv
-          source ./.venv/bin/activate
+          python -m venv venv
+          source venv/bin/activate
           pip install -r ./aderyn_py/requirements.txt
 
       - name: Submodule init
@@ -87,7 +87,7 @@ jobs:
 
       - name: Run tests
         run: |
-          source .venv/bin/activate
+          source venv/bin/activate
           cd aderyn_py
           maturin develop
           pytest tests
