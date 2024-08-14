@@ -21,7 +21,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
 
       - name: Install git submodules
         run: |
@@ -31,59 +30,6 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: check
-
-  test:
-    name: Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: foundry-toolchain
-        uses: foundry-rs/foundry-toolchain@v1.2.0
-
-      - name: Checkout sources
-        uses: actions/checkout@v4
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
-      - uses: Swatinem/rust-cache@v2
-      - name: Run cargo build
-        run: |
-          cargo build
-
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 8
-          run_install: false
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-
-      - name: Submodule init
-        run: |
-          git submodule update --init --recursive
-
-      - uses: Swatinem/rust-cache@v2
-      - name: Run cargo test
-        run: |
-          cargo test _by_loading_contract_directly
-
-      - uses: Swatinem/rust-cache@v2
-      - name: Run cargo test
-        run: |
-          cargo test -- --nocapture
 
   reports:
     name: Check Reports
@@ -141,7 +87,7 @@ jobs:
 
       - name: Run tests
         run: |
-          source ./.venv/bin/activate
+          source .venv/bin/activate
           cd aderyn_py
           maturin develop
           pytest tests
